@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Scanner</title>
+    <style>
+        body { background-color: #0f1720; color: #e6eef6; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 440px; background: #111827; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .status { color: #06b6d4; font-weight: bold; font-size: 0.9em; }
+        .card { background: #0b1220; padding: 15px; border-radius: 5px; }
+        .counter { color: #9aa4af; font-size: 0.85em; margin-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .grid label { font-size: 0.8em; display: flex; align-items: center; }
+        .feed, .found { background: #061018; border-radius: 3px; height: 150px; overflow-y: hidden; font-family: 'Consolas', monospace; font-size: 0.8em; padding: 5px; margin-top: 5px; }
+        .feed { color: #9fe6c5; }
+        .found { color: #10b981; height: 80px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-start { background: #10b981; color: white; }
+        .btn-stop { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <span style="font-size: 1.2em; font-weight: bold;">Crypto Scanner</span>
+            <span id="status" class="status">INACTIF</span>
+        </div>
+        <div class="card">
+            <div id="counter" class="counter">Itérations : 0</div>
+            <div class="grid">
+                <label>₿ BTC</label><label>⬢ ETH</label><label>Ł LTC</label>
+                <label>◎ SOL</label><label>Ð DOGE</label><label>🔺 TRX</label>
+            </div>
+            <strong>Feed</strong>
+            <div id="feed" class="feed"></div>
+            <strong style="display:block; margin-top:10px;">Found (Private Key)</strong>
+            <div id="found" class="found"></div>
+            <div class="btn-group">
+                <button class="btn-start" onclick="startScan()">START SCAN</button>
+                <button class="btn-stop" onclick="stopScan()">STOP</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let running = false;
+        let iterations = 0;
+        let interval;
+
+        function startScan() {
+            if(running) return;
+            running = true;
+            document.getElementById('status').innerText = "EN COURS";
+            document.getElementById('found').innerHTML = "";
+            
+            // Feed fluide
+            interval = setInterval(() => {
+                iterations++;
+                document.getElementById('counter').innerText = "Itérations : " + iterations;
+                const key = Array.from({length:40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                const line = document.createElement('div');
+                line.innerText = "> " + key + "...";
+                const feed = document.getElementById('feed');
+                feed.appendChild(line);
+                feed.scrollTop = feed.scrollHeight;
+                if(feed.childNodes.length > 20) feed.removeChild(feed.firstChild);
+            }, 45);
+
+            // Trouvaille après 30 secondes
+            setTimeout(() => {
+                if(!running) return;
+                stopScan();
+                document.getElementById('status').innerText = "TERMINE";
+                document.getElementById('status').style.color = "#10b981";
+                const privKey = Array.from({length:64}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                const masked = privKey.substring(0,3) + "*".repeat(61);
+                document.getElementById('found').innerHTML = "<div>SUCCESS ► Wallet found</div><div>KEY ► " + masked + "</div>";
+            }, 30000);
+        }
+
+        function stopScan() {
+            running = false;
+            clearInterval(interval);
+            document.getElementById('status').innerText = "ARRÊTÉ";
+        }
+    </script>
+</body>
+</html>
