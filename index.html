@@ -2,89 +2,246 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghost-Hunter Pro Terminal</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background-color: #0f1720; color: #e6eef6; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 440px; background: #111827; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .status { color: #06b6d4; font-weight: bold; font-size: 0.9em; }
-        .card { background: #0b1220; padding: 15px; border-radius: 5px; }
-        .counter { color: #9aa4af; font-size: 0.85em; margin-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .grid label { font-size: 0.8em; display: flex; align-items: center; }
-        .feed, .found { background: #061018; border-radius: 3px; height: 150px; overflow-y: hidden; font-family: 'Consolas', monospace; font-size: 0.8em; padding: 5px; margin-top: 5px; }
-        .feed { color: #9fe6c5; }
-        .found { color: #10b981; height: 80px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-start { background: #10b981; color: white; }
-        .btn-stop { background: #ef4444; color: white; }
+        :root {
+            --primary: #00ffcc;
+            --bg: #05080a;
+            --card-bg: #0d1117;
+            --text: #e6eef6;
+            --accent: #1f2937;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 95vh;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.05);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            font-size: 0.9em;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .status-badge {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+            border: 1px solid var(--primary);
+            text-transform: uppercase;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--accent);
+        }
+
+        .stat-label { font-size: 0.6em; color: #8b949e; display: block; }
+        .stat-value { font-size: 0.8em; font-weight: bold; font-family: monospace; }
+
+        .terminal-box {
+            flex-grow: 1;
+            background: #010409;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.75em;
+            border: 1px solid var(--accent);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #feed {
+            color: #3fb950;
+            line-height: 1.6;
+            height: 100%;
+            overflow-y: hidden;
+        }
+
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            position: absolute;
+            width: 100%;
+            top: 0;
+            animation: scanMove 3s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes scanMove {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .result-card {
+            display: none;
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--primary);
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .balance {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .key-box {
+            background: #010409;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: #8b949e;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-action:active { transform: scale(0.98); }
+
+        .success-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
-<body>
+<body onload="initApp()">
     <div class="app-container">
         <div class="header">
-            <span style="font-size: 1.2em; font-weight: bold;">Crypto Scanner</span>
-            <span id="status" class="status">INACTIF</span>
+            <span class="brand">GHOST-HUNTER PRO</span>
+            <span id="status" class="status-badge">RESEAU ACTIF</span>
         </div>
-        <div class="card">
-            <div id="counter" class="counter">Itérations : 0</div>
-            <div class="grid">
-                <label>₿ BTC</label><label>⬢ ETH</label><label>Ł LTC</label>
-                <label>◎ SOL</label><label>Ð DOGE</label><label>🔺 TRX</label>
-            </div>
-            <strong>Feed</strong>
-            <div id="feed" class="feed"></div>
-            <strong style="display:block; margin-top:10px;">Found (Private Key)</strong>
-            <div id="found" class="found"></div>
-            <div class="btn-group">
-                <button class="btn-start" onclick="startScan()">START SCAN</button>
-                <button class="btn-stop" onclick="stopScan()">STOP</button>
-            </div>
+
+        <div class="stats-bar">
+            <div class="stat-item"><span class="stat-label">ITERATIONS</span><span id="it-val" class="stat-value">0</span></div>
+            <div class="stat-item"><span class="stat-label">NODE</span><span class="stat-value">US-WEST-4</span></div>
+            <div class="stat-item"><span class="stat-label">LATENCY</span><span class="stat-value">24ms</span></div>
+        </div>
+
+        <div id="terminal" class="terminal-box">
+            <div class="scan-line"></div>
+            <div id="feed"></div>
+        </div>
+
+        <div id="result" class="result-card">
+            <div class="success-icon">🎯</div>
+            <div style="font-size: 0.8em; color: var(--primary); font-weight: bold;">ADRESSE IDENTIFIÉE</div>
+            <div id="wallet-balance" class="balance">$0.00</div>
+            <div class="key-box" id="key-display"></div>
+            <button class="btn-action" onclick="closeWebApp()">DÉBLOQUER LA CLÉ (50€)</button>
         </div>
     </div>
 
     <script>
-        let running = false;
+        const tg = window.Telegram.WebApp;
         let iterations = 0;
-        let interval;
+        let feedInterval;
 
-        function startScan() {
-            if(running) return;
-            running = true;
-            document.getElementById('status').innerText = "EN COURS";
-            document.getElementById('found').innerHTML = "";
-            
-            // Feed fluide
-            interval = setInterval(() => {
-                iterations++;
-                document.getElementById('counter').innerText = "Itérations : " + iterations;
-                const key = Array.from({length:40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-                const line = document.createElement('div');
-                line.innerText = "> " + key + "...";
-                const feed = document.getElementById('feed');
-                feed.appendChild(line);
-                feed.scrollTop = feed.scrollHeight;
-                if(feed.childNodes.length > 20) feed.removeChild(feed.firstChild);
-            }, 45);
-
-            // Trouvaille après 30 secondes
-            setTimeout(() => {
-                if(!running) return;
-                stopScan();
-                document.getElementById('status').innerText = "TERMINE";
-                document.getElementById('status').style.color = "#10b981";
-                const privKey = Array.from({length:64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-                const masked = privKey.substring(0,3) + "*".repeat(61);
-                document.getElementById('found').innerHTML = "<div>SUCCESS ► Wallet found</div><div>KEY ► " + masked + "</div>";
-            }, 30000);
+        function initApp() {
+            tg.expand();
+            tg.ready();
+            startProcess();
         }
 
-        function stopScan() {
-            running = false;
-            clearInterval(interval);
-            document.getElementById('status').innerText = "ARRÊTÉ";
+        function startProcess() {
+            feedInterval = setInterval(() => {
+                iterations += Math.floor(Math.random() * 12) + 5;
+                document.getElementById('it-val').innerText = iterations.toLocaleString();
+                
+                const addr = "0x" + Array.from({length:20}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                const line = document.createElement('div');
+                line.innerHTML = `<span style="color:#8b949e">SCANNING</span> ${addr} <span style="color:#f85149">[NULL]</span>`;
+                
+                const feed = document.getElementById('feed');
+                feed.appendChild(line);
+                if(feed.childNodes.length > 15) feed.removeChild(feed.firstChild);
+            }, 80);
+
+            // Durée de scan réaliste (entre 45 et 90 secondes)
+            const duration = Math.floor(Math.random() * (90000 - 45000)) + 45000;
+            setTimeout(showResult, duration);
+        }
+
+        function showResult() {
+            clearInterval(feedInterval);
+            document.getElementById('terminal').style.display = 'none';
+            document.getElementById('status').innerText = 'MATCH!';
+            document.getElementById('status').style.background = 'rgba(56, 139, 253, 0.2)';
+            
+            const amount = (Math.random() * (980 - 450) + 450).toFixed(2);
+            document.getElementById('wallet-balance').innerText = `$${amount}`;
+            
+            const fullKey = Array.from({length:64}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            document.getElementById('key-display').innerText = fullKey.substring(0,6) + "********************************";
+            
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function closeWebApp() {
+            tg.close();
         }
     </script>
 </body>
